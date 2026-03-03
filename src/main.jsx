@@ -14,7 +14,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <TaskProvider>
           <NotificationProvider>
-            <BrowserRouter>
+            <BrowserRouter basename={import.meta.env.BASE_URL}>
               <App />
             </BrowserRouter>
           </NotificationProvider>
@@ -23,3 +23,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </ThemeProvider>
   </React.StrictMode>
 );
+
