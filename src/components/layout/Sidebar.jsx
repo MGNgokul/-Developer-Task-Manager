@@ -3,12 +3,12 @@ import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Sidebar() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const onResize = () => {
-      const mobile = window.innerWidth <= 768;
+      const mobile = window.innerWidth <= 900;
       setIsMobile(mobile);
       if (!mobile) {
         setOpen(false);
@@ -83,3 +83,4 @@ function Sidebar() {
 }
 
 export default Sidebar;
+

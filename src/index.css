@@ -1729,7 +1729,7 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .mobile-menu-btn {
     display: block;
     top: 12px;
@@ -1750,6 +1750,10 @@ body {
 }
 /* Responsive */
 @media (max-width: 900px) {
+  .content {
+    margin-left: 0;
+  }
+
   .dashboard-page {
     padding: 18px;
   }
@@ -2609,3 +2613,4 @@ body {
     background: rgba(15, 23, 42, 0.28);
   }
 }
+
