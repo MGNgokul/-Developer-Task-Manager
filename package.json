@@ -1,6 +1,6 @@
 {
   "name": "developer-task-manager",
-  "homepage": "https://github.com/MGNgokul/Developer-Task-Manager.git",
+  "homepage": "https://mgngokul.github.io/-Developer-Task-Manager/",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -24,3 +24,4 @@
     "vite": "^5.4.10"
   }
 }
+
