@@ -3,20 +3,25 @@ import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Sidebar() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia("(max-width: 1024px)").matches
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onResize = () => {
-      const mobile = window.innerWidth <= 900;
+    const mediaQuery = window.matchMedia("(max-width: 1024px)");
+    const onChange = (event) => {
+      const mobile = event.matches;
       setIsMobile(mobile);
       if (!mobile) {
         setOpen(false);
       }
     };
 
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    setIsMobile(mediaQuery.matches);
+    mediaQuery.addEventListener("change", onChange);
+
+    return () => mediaQuery.removeEventListener("change", onChange);
   }, []);
 
   return (
