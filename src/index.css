@@ -2434,6 +2434,44 @@ body {
   }
 }
 
+@media (min-width: 769px) and (max-width: 1024px) {
+  .mobile-menu-btn {
+    display: none;
+  }
+
+  .sidebar.sidebar--collapsed {
+    width: 78px;
+    padding: 14px 8px;
+    top: 72px;
+    height: calc(100vh - 72px);
+  }
+
+  .sidebar.sidebar--collapsed .sidebar-header h3,
+  .sidebar.sidebar--collapsed .sidebar-label {
+    display: none;
+  }
+
+  .sidebar.sidebar--collapsed .sidebar-header {
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .sidebar.sidebar--collapsed .sidebar-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 8px;
+  }
+
+  .sidebar.sidebar--collapsed .nav-icon {
+    margin-right: 0;
+  }
+
+  .content {
+    margin-left: 78px;
+  }
+}
+
 @media (max-width: 560px) {
   .auth-card {
     padding: 18px 14px;

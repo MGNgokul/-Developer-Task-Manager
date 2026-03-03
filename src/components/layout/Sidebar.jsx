@@ -3,32 +3,38 @@ import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Sidebar() {
-  const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia("(max-width: 1024px)").matches
-  );
+  const getViewport = () => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    const isTablet = window.matchMedia("(min-width: 769px) and (max-width: 1024px)").matches;
+    return { isMobile, isTablet };
+  };
+
+  const [viewport, setViewport] = useState(getViewport);
   const [open, setOpen] = useState(false);
+  const { isMobile, isTablet } = viewport;
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 1024px)");
-    const onChange = (event) => {
-      const mobile = event.matches;
-      setIsMobile(mobile);
-      if (!mobile) {
+    const onResize = () => {
+      const next = getViewport();
+      setViewport(next);
+      if (!next.isMobile) {
         setOpen(false);
       }
     };
 
-    setIsMobile(mediaQuery.matches);
-    mediaQuery.addEventListener("change", onChange);
+    window.addEventListener("resize", onResize);
+    onResize();
 
-    return () => mediaQuery.removeEventListener("change", onChange);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   return (
     <>
-      <button className="mobile-menu-btn" onClick={() => setOpen(true)}>
-        Menu
-      </button>
+      {isMobile && (
+        <button className="mobile-menu-btn" onClick={() => setOpen(true)}>
+          Menu
+        </button>
+      )}
 
       <AnimatePresence>
         {(open || !isMobile) && (
@@ -50,7 +56,7 @@ function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ duration: 0.3 }}
-              className="sidebar"
+              className={`sidebar ${isTablet ? "sidebar--collapsed" : ""}`.trim()}
             >
               <div className="sidebar-header">
                 <h3>Workspace</h3>
@@ -64,19 +70,19 @@ function Sidebar() {
               <nav>
                 <NavLink to="/dashboard" className="sidebar-link" onClick={() => setOpen(false)}>
                   <span className="nav-icon" aria-hidden="true">D</span>
-                  Dashboard
+                  <span className="sidebar-label">Dashboard</span>
                 </NavLink>
                 <NavLink to="/tasks" className="sidebar-link" onClick={() => setOpen(false)}>
                   <span className="nav-icon" aria-hidden="true">T</span>
-                  Tasks
+                  <span className="sidebar-label">Tasks</span>
                 </NavLink>
                 <NavLink to="/analytics" className="sidebar-link" onClick={() => setOpen(false)}>
                   <span className="nav-icon" aria-hidden="true">A</span>
-                  Analytics
+                  <span className="sidebar-label">Analytics</span>
                 </NavLink>
                 <NavLink to="/settings" className="sidebar-link" onClick={() => setOpen(false)}>
                   <span className="nav-icon" aria-hidden="true">S</span>
-                  Settings
+                  <span className="sidebar-label">Settings</span>
                 </NavLink>
               </nav>
             </motion.aside>
