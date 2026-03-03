@@ -31,8 +31,13 @@ function Sidebar() {
   return (
     <>
       {isMobile && (
-        <button className="mobile-menu-btn" onClick={() => setOpen(true)}>
-          Menu
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          aria-label="Open sidebar menu"
+          onClick={() => setOpen(true)}
+        >
+          ☰
         </button>
       )}
 
