@@ -12,9 +12,20 @@ function formatDate(dateInput) {
 }
 
 function Notifications() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, readIds } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    readIds,
+    snoozedMap,
+    snoozeNotification,
+    clearSnooze,
+    notificationsPaused,
+  } = useNotifications();
   const overdueCount = notifications.filter((item) => item.type === "overdue").length;
-  const dueTomorrowCount = notifications.filter((item) => item.type === "due-tomorrow").length;
+  const dueSoonCount = notifications.filter((item) => item.type === "due-soon").length;
+  const slaBreachCount = notifications.filter((item) => item.type === "sla-breach").length;
 
   return (
     <div className="notifications-page">
@@ -25,7 +36,12 @@ function Notifications() {
       >
         <div>
           <h2>Notifications</h2>
-          <p>Task alerts for overdue and due tomorrow deadlines.</p>
+          <p>Smart reminders for overdue and upcoming task deadlines.</p>
+          {notificationsPaused && (
+            <p className="notifications-meta">
+              Quiet mode active: popups and push/webhook delivery are temporarily paused.
+            </p>
+          )}
         </div>
         <button
           type="button"
@@ -51,8 +67,12 @@ function Notifications() {
           <p>{overdueCount}</p>
         </div>
         <div className="stat-card glass-card">
-          <h3>Due Tomorrow</h3>
-          <p>{dueTomorrowCount}</p>
+          <h3>Due Soon</h3>
+          <p>{dueSoonCount}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>SLA Breach</h3>
+          <p>{slaBreachCount}</p>
         </div>
       </section>
 
@@ -65,6 +85,17 @@ function Notifications() {
         <div className="notifications-list">
           {notifications.map((item) => {
             const isRead = readIds.includes(item.id);
+            const snoozedUntil = snoozedMap[item.id];
+            const isSnoozed = Boolean(
+              snoozedUntil && new Date(snoozedUntil).getTime() > Date.now()
+            );
+            const typeLabel =
+              item.type === "overdue"
+                ? "Overdue"
+                : item.type === "sla-breach"
+                  ? "SLA Breach"
+                  : "Due Soon";
+
             return (
               <article
                 key={item.id}
@@ -74,18 +105,26 @@ function Notifications() {
                   <div className="notifications-item-top">
                     <span
                       className={`notifications-pill ${
-                        item.type === "overdue" ? "notifications-pill--danger" : "notifications-pill--warning"
+                        item.type === "overdue" || item.type === "sla-breach"
+                          ? "notifications-pill--danger"
+                          : "notifications-pill--warning"
                       }`}
                     >
-                      {item.type === "overdue" ? "Overdue" : "Due Tomorrow"}
+                      {typeLabel}
                     </span>
                     {!isRead && <span className="notifications-unread-dot"></span>}
+                    {isSnoozed && <span className="notifications-pill notifications-pill--snoozed">Snoozed</span>}
                   </div>
                   <strong>{item.title}</strong>
                   <p>{item.message}</p>
                   <p className="notifications-meta">
-                    Due: {formatDate(item.dueDate)} • Priority: {item.priority}
+                    Due: {formatDate(item.dueDate)} | Priority: {item.priority}
                   </p>
+                  {isSnoozed && (
+                    <p className="notifications-meta">
+                      Muted until: {new Date(snoozedUntil).toLocaleString()}
+                    </p>
+                  )}
                 </div>
 
                 <div className="notifications-item-actions">
@@ -97,6 +136,23 @@ function Notifications() {
                   >
                     {isRead ? "Read" : "Mark Read"}
                   </button>
+                  {!isSnoozed ? (
+                    <button
+                      type="button"
+                      className="filter-btn"
+                      onClick={() => snoozeNotification(item.id, 24)}
+                    >
+                      Snooze 24h
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="filter-btn"
+                      onClick={() => clearSnooze(item.id)}
+                    >
+                      Unsnooze
+                    </button>
+                  )}
                 </div>
               </article>
             );

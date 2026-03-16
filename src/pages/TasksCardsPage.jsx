@@ -2,7 +2,16 @@ import TaskCard from "../components/tasks/TaskCard";
 import useTasks from "../hooks/useTasks";
 
 function TasksCardsPage() {
-  const { tasks, moveTask, deleteTask } = useTasks();
+  const {
+    tasks,
+    moveTask,
+    deleteTask,
+    startTaskTimer,
+    stopTaskTimer,
+    addComment,
+    editComment,
+    deleteComment,
+  } = useTasks();
 
   return (
     <div className="dashboard-page">
@@ -20,6 +29,12 @@ function TasksCardsPage() {
             task={task}
             onMoveTask={moveTask}
             onDeleteTask={deleteTask}
+            onStartTimer={startTaskTimer}
+            onStopTimer={stopTaskTimer}
+            allTasks={tasks}
+            onAddComment={addComment}
+            onEditComment={editComment}
+            onDeleteComment={deleteComment}
           />
         ))}
         {tasks.length === 0 && <p className="kanban-empty">No tasks available yet.</p>}

@@ -10,10 +10,21 @@ function TasksFilterPage() {
     setFilter,
     search,
     setSearch,
+    tagFilter,
+    setTagFilter,
     sortBy,
     setSortBy,
+    savedViews,
+    saveCurrentView,
+    applySavedView,
+    deleteSavedView,
     moveTask,
     deleteTask,
+    startTaskTimer,
+    stopTaskTimer,
+    addComment,
+    editComment,
+    deleteComment,
   } = useTasks();
 
   return (
@@ -31,8 +42,14 @@ function TasksFilterPage() {
         tasks={tasks}
         search={search}
         setSearch={setSearch}
+        tagFilter={tagFilter}
+        setTagFilter={setTagFilter}
         sortBy={sortBy}
         setSortBy={setSortBy}
+        savedViews={savedViews}
+        onSaveView={saveCurrentView}
+        onApplyView={applySavedView}
+        onDeleteView={deleteSavedView}
       />
 
       <section className="task-cards-grid">
@@ -42,6 +59,12 @@ function TasksFilterPage() {
             task={task}
             onMoveTask={moveTask}
             onDeleteTask={deleteTask}
+            onStartTimer={startTaskTimer}
+            onStopTimer={stopTaskTimer}
+            allTasks={tasks}
+            onAddComment={addComment}
+            onEditComment={editComment}
+            onDeleteComment={deleteComment}
           />
         ))}
         {filteredTasks.length === 0 && <p className="kanban-empty">No tasks match current filter.</p>}

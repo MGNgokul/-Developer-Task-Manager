@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 const FILTERS = ["all", "low", "medium", "high"];
 
@@ -8,15 +9,25 @@ function TaskFilter({
   tasks,
   search,
   setSearch,
+  tagFilter,
+  setTagFilter,
   sortBy,
   setSortBy,
+  savedViews,
+  onSaveView,
+  onApplyView,
+  onDeleteView,
 }) {
+  const [viewName, setViewName] = useState("");
   const counts = {
     all: tasks.length,
     low: tasks.filter((task) => task.priority === "low").length,
     medium: tasks.filter((task) => task.priority === "medium").length,
     high: tasks.filter((task) => task.priority === "high").length,
   };
+  const tags = Array.from(
+    new Set(tasks.flatMap((task) => (Array.isArray(task.tags) ? task.tags : [])))
+  ).sort((a, b) => a.localeCompare(b));
 
   return (
     <motion.div
@@ -47,12 +58,64 @@ function TaskFilter({
           onChange={(event) => setSearch(event.target.value)}
         />
 
+        <select value={tagFilter} onChange={(event) => setTagFilter(event.target.value)}>
+          <option value="all">All Tags</option>
+          {tags.map((tag) => (
+            <option key={tag} value={tag}>
+              #{tag}
+            </option>
+          ))}
+        </select>
+
         <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
           <option value="due-soon">Due Soon</option>
         </select>
       </div>
+
+      <div className="task-view-controls">
+        <input
+          type="text"
+          placeholder="Saved view name"
+          value={viewName}
+          onChange={(event) => setViewName(event.target.value)}
+          maxLength={40}
+        />
+        <button
+          type="button"
+          className="filter-btn"
+          onClick={() => {
+            const result = onSaveView ? onSaveView(viewName) : { ok: false };
+            if (result?.ok) setViewName("");
+          }}
+        >
+          Save View
+        </button>
+        <select onChange={(event) => event.target.value && onApplyView && onApplyView(event.target.value)}>
+          <option value="">Apply saved view</option>
+          {(savedViews || []).map((view) => (
+            <option key={view.id} value={view.id}>
+              {view.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {(savedViews || []).length > 0 && (
+        <div className="task-view-list">
+          {savedViews.slice(0, 8).map((view) => (
+            <button
+              key={view.id}
+              type="button"
+              className="filter-btn"
+              onClick={() => onDeleteView && onDeleteView(view.id)}
+            >
+              Delete {view.name}
+            </button>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }

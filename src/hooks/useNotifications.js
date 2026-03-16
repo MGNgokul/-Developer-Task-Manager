@@ -7,12 +7,18 @@ export default function useNotifications() {
     return {
       notifications: [],
       unreadNotifications: [],
+      activeNotifications: [],
       unreadCount: 0,
       readIds: [],
+      snoozedMap: {},
       markAsRead: () => {},
       markAllAsRead: () => {},
+      snoozeNotification: () => {},
+      clearSnooze: () => {},
+      requestBrowserPermission: async () => "unsupported",
       toasts: [],
       dismissToast: () => {},
+      notificationsPaused: false,
     };
   }
   return context;

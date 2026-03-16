@@ -64,8 +64,22 @@ function getBoardChecks(tasks) {
   return issues;
 }
 
-function KanbanBoard({ tasks, onMoveTask, onDeleteTask }) {
+function KanbanBoard({
+  tasks,
+  onMoveTask,
+  onReorderTask,
+  onDeleteTask,
+  onAddSubtask,
+  onToggleSubtask,
+  onStartTimer,
+  onStopTimer,
+  allTasks = [],
+  onAddComment,
+  onEditComment,
+  onDeleteComment,
+}) {
   const [actionError, setActionError] = useState("");
+  const [draggedTaskId, setDraggedTaskId] = useState(null);
   const getColumnTasks = (column) => tasks.filter((task) => task.status === column);
   const boardChecks = useMemo(() => getBoardChecks(tasks), [tasks]);
 
@@ -111,6 +125,41 @@ function KanbanBoard({ tasks, onMoveTask, onDeleteTask }) {
     setActionError("");
   };
 
+  const handleTaskDrop = (targetStatus, beforeTaskId = null) => {
+    if (!draggedTaskId || !onReorderTask) return;
+    const task = tasks.find((item) => item.id === draggedTaskId);
+    if (!task) {
+      setDraggedTaskId(null);
+      return;
+    }
+
+    if (task.status !== targetStatus) {
+      const allowedNext = ALLOWED_TRANSITIONS[task.status] || [];
+      if (!allowedNext.includes(targetStatus)) {
+        setActionError("Invalid move: follow workflow To Do -> In Progress -> Done.");
+        setDraggedTaskId(null);
+        return;
+      }
+
+      const targetColumn = COLUMNS.find((column) => column.key === targetStatus);
+      if (targetColumn?.limit && columnCounts[targetStatus] >= targetColumn.limit) {
+        setActionError(`${targetColumn.label} limit reached (${targetColumn.limit}).`);
+        setDraggedTaskId(null);
+        return;
+      }
+    }
+
+    const result = onReorderTask(draggedTaskId, targetStatus, beforeTaskId);
+    if (result?.ok === false) {
+      setActionError(result.message || "Unable to reorder task.");
+      setDraggedTaskId(null);
+      return;
+    }
+
+    setActionError("");
+    setDraggedTaskId(null);
+  };
+
   return (
     <motion.div
       className="kanban-wrap"
@@ -153,6 +202,19 @@ function KanbanBoard({ tasks, onMoveTask, onDeleteTask }) {
             tasks={columnTasks}
             onMoveTask={handleMoveTask}
             onDeleteTask={onDeleteTask}
+            onAddSubtask={onAddSubtask}
+            onToggleSubtask={onToggleSubtask}
+            onStartTimer={onStartTimer}
+            onStopTimer={onStopTimer}
+            allTasks={allTasks}
+            onAddComment={onAddComment}
+            onEditComment={onEditComment}
+            onDeleteComment={onDeleteComment}
+            columnKey={column.key}
+            onTaskDragStart={setDraggedTaskId}
+            onTaskDragEnd={() => setDraggedTaskId(null)}
+            onTaskDrop={handleTaskDrop}
+            draggedTaskId={draggedTaskId}
           />
         );
       })}

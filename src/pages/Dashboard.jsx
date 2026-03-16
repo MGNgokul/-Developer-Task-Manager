@@ -2,6 +2,7 @@ import { useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TaskContext } from "../context/TaskContext";
+import { FocusContext } from "../context/FocusContext";
 
 function formatDate(dateInput) {
   if (!dateInput) return "No date";
@@ -13,8 +14,39 @@ function formatDate(dateInput) {
   });
 }
 
+function formatDuration(totalSeconds) {
+  const seconds = Math.max(0, Number(totalSeconds) || 0);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+function formatClock(totalSeconds) {
+  const safe = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function trendLabel(trend, delta) {
+  if (trend === "up") return `Up +${delta}`;
+  if (trend === "down") return `Down ${delta}`;
+  return "Stable";
+}
+
+function formatSlaCountdown(hoursLeft) {
+  if (!Number.isFinite(hoursLeft)) return "-";
+  if (hoursLeft <= 0) return "Breached";
+  const totalMinutes = Math.round(hoursLeft * 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${minutes}m`;
+}
+
 function Dashboard() {
   const { tasks, stats, clearCompleted } = useContext(TaskContext);
+  const focus = useContext(FocusContext);
 
   const insights = useMemo(() => {
     const today = new Date();
@@ -91,6 +123,46 @@ function Dashboard() {
         <div className="stat-card glass-card">
           <h3>Overdue</h3>
           <p>{insights.overdue.length}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>On-Time Rate</h3>
+          <p>{stats.onTimeRate}%</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Focus Score</h3>
+          <p>{stats.focusScore}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Weekly Done</h3>
+          <p>{stats.weeklyCompleted}/{stats.weeklyGoal}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Streak</h3>
+          <p>{stats.completionStreakDays} day(s)</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Tracked Today</h3>
+          <p>{formatDuration(stats.trackedTodaySeconds)}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Tracked Week</h3>
+          <p>{formatDuration(stats.trackedWeekSeconds)}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Blocked Tasks</h3>
+          <p>{stats.blocked}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>SLA Breached</h3>
+          <p>{stats.slaBreached}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>SLA At Risk</h3>
+          <p>{stats.slaAtRisk}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Overloaded Members</h3>
+          <p>{stats.overloadedMembers}</p>
         </div>
       </motion.div>
 
@@ -187,6 +259,187 @@ function Dashboard() {
               <li>Done: {insights.status.done}</li>
               <li>Overdue: {insights.overdue.length}</li>
             </ul>
+          </div>
+
+          <div className="glass-card">
+            <h3>SLA Live Monitor</h3>
+            <p className="dashboard-subtitle">
+              Next breach in: {formatSlaCountdown(stats.nextSlaBreachHours)}
+            </p>
+            <div className="sla-monitor-list">
+              {(stats.slaWatchlist || []).slice(0, 6).map((item) => (
+                <article key={item.taskId} className="sla-monitor-item">
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p className="analytics-note">
+                      {item.priority} priority | age {item.ageHours}h / SLA {item.thresholdHours}h
+                    </p>
+                  </div>
+                  <span className={`sla-pill sla-pill--${item.status}`}>
+                    {formatSlaCountdown(item.hoursLeft)}
+                  </span>
+                </article>
+              ))}
+              {stats.slaWatchlist?.length === 0 && (
+                <p className="kanban-empty">Enable SLA rules in Settings to activate live monitor.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="glass-card">
+            <h3>Smart Daily Briefing</h3>
+            <p className="dashboard-subtitle">{stats.dailyBriefing.summaryLine}</p>
+            <ul className="section-list">
+              <li>Overdue: {stats.dailyBriefing.overdueCount}</li>
+              <li>Due today: {stats.dailyBriefing.dueTodayCount}</li>
+              <li>Blocked: {stats.dailyBriefing.blockedCount}</li>
+              <li>High-priority open: {stats.dailyBriefing.highPriorityOpenCount}</li>
+            </ul>
+            <p className="analytics-note">{stats.dailyBriefing.recommendation}</p>
+            <div className="briefing-focus-list">
+              {stats.dailyBriefing.focusCandidates.map((item) => (
+                <article key={item.id} className="briefing-focus-item">
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p className="analytics-note">
+                      {item.priority} priority
+                      {item.dueDate ? ` | due ${formatDate(item.dueDate)}` : ""}
+                    </p>
+                  </div>
+                  <Link className="filter-btn" to="/tasks?section=task-filter">
+                    Open
+                  </Link>
+                </article>
+              ))}
+              {stats.dailyBriefing.focusCandidates.length === 0 && (
+                <p className="kanban-empty">No focus queue right now.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="glass-card">
+            <h3>Productivity Insights</h3>
+            <div className="insight-list">
+              <article className="insight-item">
+                <div>
+                  <strong>Momentum</strong>
+                  <p className="analytics-note">
+                    Last 7 days: {stats.last7Completed} vs previous {stats.prev7Completed}
+                  </p>
+                </div>
+                <span className={`insight-pill insight-pill--${stats.momentumTrend}`}>
+                  {trendLabel(stats.momentumTrend, stats.momentumDelta)}
+                </span>
+              </article>
+
+              <article className="insight-item">
+                <div>
+                  <strong>Burnout Risk</strong>
+                  <p className="analytics-note">
+                    Score from workload hours, overdue tasks, and high-priority pressure.
+                  </p>
+                </div>
+                <span className={`insight-pill insight-pill--${stats.burnoutRiskLevel}`}>
+                  {stats.burnoutRiskLevel} ({stats.burnoutRiskScore})
+                </span>
+              </article>
+
+              <article className="insight-item">
+                <div>
+                  <strong>Workload Balance</strong>
+                  <p className="analytics-note">
+                    Team utilization spread score based on planner distribution.
+                  </p>
+                </div>
+                <span className="insight-pill insight-pill--info">
+                  {stats.workloadBalanceScore}/100
+                </span>
+              </article>
+            </div>
+          </div>
+
+          <div className="glass-card">
+            <h3>Team Workload Planner</h3>
+            <p className="dashboard-subtitle">
+              Capacity utilization is estimated from open tasks and tracked week time.
+            </p>
+            <div className="workload-list">
+              {stats.memberWorkload?.length ? (
+                stats.memberWorkload.map((member) => (
+                  <article key={member.memberId} className="workload-item">
+                    <div className="workload-item-head">
+                      <strong>{member.name}</strong>
+                      <span
+                        className={
+                          member.overloaded
+                            ? "workload-pill workload-pill--over"
+                            : "workload-pill"
+                        }
+                      >
+                        {member.utilization}%
+                      </span>
+                    </div>
+                    <div className="analytics-progress-track">
+                      <div
+                        className={`analytics-progress-bar ${
+                          member.overloaded ? "workload-bar--over" : ""
+                        }`}
+                        style={{ width: `${Math.min(100, member.utilization)}%` }}
+                      />
+                    </div>
+                    <p className="analytics-note">
+                      {member.estimatedHours}h planned / {member.capacity}h capacity
+                    </p>
+                  </article>
+                ))
+              ) : (
+                <p className="kanban-empty">
+                  No workspace members found. Add members in Settings to enable planner.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="glass-card goal-card">
+            <h3>Weekly Goal</h3>
+            <p className="dashboard-subtitle">
+              {stats.weeklyCompleted} of {stats.weeklyGoal} completed
+            </p>
+            <div className="analytics-progress-track">
+              <div
+                className="analytics-progress-bar"
+                style={{ width: `${stats.weeklyGoalProgress}%` }}
+              />
+            </div>
+            <p className="analytics-note">{stats.weeklyGoalProgress}% reached this week</p>
+            <p className="analytics-note">
+              {stats.activeTimerTaskId ? "A task timer is currently running." : "No active timer running."}
+            </p>
+          </div>
+
+          <div className="glass-card">
+            <h3>Focus Mode</h3>
+            <p className="dashboard-subtitle">
+              {focus.phaseLabel} - {focus.completedToday} session(s) completed today
+            </p>
+            <p className="focus-clock">{formatClock(focus.secondsLeft)}</p>
+            <div className="settings-row focus-actions">
+              {focus.isRunning ? (
+                <button type="button" className="filter-btn" onClick={focus.pause}>
+                  Pause
+                </button>
+              ) : (
+                <button type="button" className="btn" onClick={focus.start}>
+                  Start
+                </button>
+              )}
+              <button type="button" className="filter-btn" onClick={focus.skip}>
+                Skip
+              </button>
+              <button type="button" className="btn-outline" onClick={focus.reset}>
+                Reset
+              </button>
+            </div>
           </div>
 
           <div className="glass-card">

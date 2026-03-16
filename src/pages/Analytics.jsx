@@ -13,6 +13,12 @@ function formatShortDay(date) {
   return date.toLocaleDateString(undefined, { weekday: "short" });
 }
 
+function formatHours(value) {
+  if (!Number.isFinite(value) || value <= 0) return "0h";
+  if (value < 24) return `${value.toFixed(1)}h`;
+  return `${(value / 24).toFixed(1)}d`;
+}
+
 function Analytics() {
   const [priorityView, setPriorityView] = useState("all");
 
@@ -126,6 +132,80 @@ function Analytics() {
     return lines;
   }, [completionRate, overdueMetrics.overdue, priorityData]);
 
+  const advancedMetrics = useMemo(() => {
+    const completedTasks = filtered.filter((task) => task.status === "done" && task.completedAt);
+    const leadHours = completedTasks
+      .map((task) => {
+        const start = new Date(task.createdAt || task.completedAt).getTime();
+        const end = new Date(task.completedAt).getTime();
+        return (end - start) / (1000 * 60 * 60);
+      })
+      .filter((value) => Number.isFinite(value) && value >= 0);
+
+    const cycleHours = completedTasks
+      .map((task) => {
+        const firstTimerStart = (task.timeEntries || [])[0]?.startedAt;
+        if (!firstTimerStart) return null;
+        const start = new Date(firstTimerStart).getTime();
+        const end = new Date(task.completedAt).getTime();
+        return (end - start) / (1000 * 60 * 60);
+      })
+      .filter((value) => Number.isFinite(value) && value >= 0);
+
+    const avgLeadHours =
+      leadHours.length === 0 ? 0 : leadHours.reduce((sum, value) => sum + value, 0) / leadHours.length;
+    const avgCycleHours =
+      cycleHours.length === 0 ? 0 : cycleHours.reduce((sum, value) => sum + value, 0) / cycleHours.length;
+
+    const today = startOfDay(new Date());
+    const weeklyThroughput = Array.from({ length: 4 }, (_, index) => {
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - (index * 7 + 6));
+      weekStart.setHours(0, 0, 0, 0);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 7);
+      const doneCount = completedTasks.filter((task) => {
+        const doneAt = new Date(task.completedAt);
+        return doneAt >= weekStart && doneAt < weekEnd;
+      }).length;
+      return { label: `W${4 - index}`, count: doneCount };
+    }).reverse();
+
+    const throughputMax = Math.max(...weeklyThroughput.map((item) => item.count), 1);
+
+    const wipTasks = filtered.filter((task) => task.status === "inprogress");
+    const avgWipAgeDays =
+      wipTasks.length === 0
+        ? 0
+        : wipTasks.reduce((sum, task) => {
+            const created = new Date(task.createdAt || new Date().toISOString());
+            const age = (today - created) / (1000 * 60 * 60 * 24);
+            return sum + Math.max(0, age);
+          }, 0) / wipTasks.length;
+
+    return {
+      avgLeadHours,
+      avgCycleHours,
+      weeklyThroughput,
+      throughputMax,
+      avgWipAgeDays,
+      completedSample: completedTasks.length,
+    };
+  }, [filtered]);
+
+  const topTags = useMemo(() => {
+    const counts = new Map();
+    filtered.forEach((task) => {
+      (task.tags || []).forEach((tag) => {
+        counts.set(tag, (counts.get(tag) || 0) + 1);
+      });
+    });
+    return Array.from(counts.entries())
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [filtered]);
+
   const ringValue = `${completionRate}%`;
 
   return (
@@ -174,6 +254,18 @@ function Analytics() {
         <div className="stat-card glass-card">
           <h3>Pending</h3>
           <p>{pending}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Avg Lead Time</h3>
+          <p>{formatHours(advancedMetrics.avgLeadHours)}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Avg Cycle Time</h3>
+          <p>{formatHours(advancedMetrics.avgCycleHours)}</p>
+        </div>
+        <div className="stat-card glass-card">
+          <h3>Avg WIP Age</h3>
+          <p>{advancedMetrics.avgWipAgeDays.toFixed(1)}d</p>
         </div>
       </motion.div>
 
@@ -312,6 +404,56 @@ function Analytics() {
             </div>
           </div>
           <p className="analytics-note">Tasks created each day over the last 7 days.</p>
+        </motion.article>
+
+        <motion.article
+          className="analytics-card glass-card"
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.38 }}
+        >
+          <h3>4-Week Throughput</h3>
+          <div className="mini-chart-list">
+            {advancedMetrics.weeklyThroughput.map((item) => (
+              <div className="mini-chart-row" key={item.label}>
+                <span>{item.label}</span>
+                <div className="mini-chart-track">
+                  <div
+                    className="mini-chart-fill info"
+                    style={{ width: `${(item.count / advancedMetrics.throughputMax) * 100}%` }}
+                  />
+                </div>
+                <strong>{item.count}</strong>
+              </div>
+            ))}
+          </div>
+          <p className="analytics-note">
+            Completed tasks per week (sample size: {advancedMetrics.completedSample}).
+          </p>
+        </motion.article>
+
+        <motion.article
+          className="analytics-card glass-card"
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.42 }}
+        >
+          <h3>Top Tags</h3>
+          <div className="mini-chart-list">
+            {topTags.map((item) => (
+              <div className="mini-chart-row" key={item.tag}>
+                <span>#{item.tag}</span>
+                <div className="mini-chart-track">
+                  <div
+                    className="mini-chart-fill success"
+                    style={{ width: `${(item.count / Math.max(topTags[0]?.count || 1, 1)) * 100}%` }}
+                  />
+                </div>
+                <strong>{item.count}</strong>
+              </div>
+            ))}
+            {topTags.length === 0 && <p className="kanban-empty">No tags used yet.</p>}
+          </div>
         </motion.article>
       </section>
 

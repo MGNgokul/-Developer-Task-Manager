@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import { TaskContext } from "../context/TaskContext";
@@ -10,21 +10,44 @@ import TaskCard from "../components/tasks/TaskCard";
 function Tasks() {
   const [searchParams] = useSearchParams();
   const activeSection = searchParams.get("section") || "workspace";
+  const query = searchParams.get("q") || "";
   const {
     tasks,
     filteredTasks,
+    kanbanTasks,
     filter,
     setFilter,
     search,
     setSearch,
+    tagFilter,
+    setTagFilter,
     sortBy,
     setSortBy,
+    savedViews,
+    saveCurrentView,
+    applySavedView,
+    deleteSavedView,
     addTask,
     moveTask,
+    reorderTask,
     deleteTask,
+    addSubtask,
+    toggleSubtask,
+    addComment,
+    editComment,
+    deleteComment,
+    startTaskTimer,
+    stopTaskTimer,
     clearCompleted,
     stats,
   } = useContext(TaskContext);
+
+  useEffect(() => {
+    if (!query) return;
+    if (search !== query) {
+      setSearch(query);
+    }
+  }, [query, search, setSearch]);
 
   const workspaceData = useMemo(() => {
     const today = new Date();
@@ -105,6 +128,14 @@ function Tasks() {
               <h3>Due This Week</h3>
               <p>{workspaceData.dueSoon.length}</p>
             </div>
+            <div className="stat-card glass-card">
+              <h3>Recurring</h3>
+              <p>{stats.recurring}</p>
+            </div>
+            <div className="stat-card glass-card">
+              <h3>Checklist Done</h3>
+              <p>{stats.subtaskDone}/{stats.subtaskTotal}</p>
+            </div>
           </motion.div>
 
           <section className="dashboard-local-nav">
@@ -169,7 +200,7 @@ function Tasks() {
                       <div>
                         <strong>{task.title}</strong>
                         <p>
-                          {task.status} • {task.priority} • {formatDate(task.createdAt?.slice(0, 10))}
+                          {task.status} | {task.priority} | {formatDate(task.createdAt?.slice(0, 10))}
                         </p>
                       </div>
                     </article>
@@ -202,8 +233,8 @@ function Tasks() {
                 <ul className="section-list">
                   <li>Create tasks with clear action-based titles</li>
                   <li>Review due-this-week tasks daily</li>
-                  <li>Use Kanban to move stalled work forward</li>
-                  <li>Clear completed tasks weekly</li>
+                  <li>Use recurring tasks for repeating routines</li>
+                  <li>Break large work into checklist subtasks</li>
                 </ul>
               </div>
             </aside>
@@ -226,34 +257,15 @@ function Tasks() {
                 Create clear tasks with a short title and a realistic due date.
               </p>
               <ul className="section-list">
-                <li>Use a short, action-based title</li>
-                <li>Add a priority to set the right focus</li>
+                <li>Use recurrence for repeated work</li>
+                <li>Add checklist items for task progress</li>
                 <li>Pick a due date to track urgency</li>
               </ul>
-            </div>
-            <div className="glass-card">
-              <h3>
-                <span className="card-icon" aria-hidden="true">S</span>
-                Quick Stats
-              </h3>
-              <div className="mini-stats-grid">
-                <div>
-                  <span>Total</span>
-                  <strong>{stats.total}</strong>
-                </div>
-                <div>
-                  <span>Pending</span>
-                  <strong>{stats.pending}</strong>
-                </div>
-                <div>
-                  <span>Done</span>
-                  <strong>{stats.completed}</strong>
-                </div>
-              </div>
             </div>
           </aside>
         </section>
       )}
+
       {activeSection === "task-filter" && (
         <section className="section-grid">
           <div className="section-main">
@@ -263,8 +275,14 @@ function Tasks() {
               tasks={tasks}
               search={search}
               setSearch={setSearch}
+              tagFilter={tagFilter}
+              setTagFilter={setTagFilter}
               sortBy={sortBy}
               setSortBy={setSortBy}
+              savedViews={savedViews}
+              onSaveView={saveCurrentView}
+              onApplyView={applySavedView}
+              onDeleteView={deleteSavedView}
             />
             <div className="glass-card">
               <h3>Filtered Results</h3>
@@ -278,6 +296,14 @@ function Tasks() {
                     task={task}
                     onMoveTask={moveTask}
                     onDeleteTask={deleteTask}
+                    onAddSubtask={addSubtask}
+                    onToggleSubtask={toggleSubtask}
+                    onStartTimer={startTaskTimer}
+                    onStopTimer={stopTaskTimer}
+                    allTasks={tasks}
+                    onAddComment={addComment}
+                    onEditComment={editComment}
+                    onDeleteComment={deleteComment}
                   />
                 ))}
                 {filteredTasks.length === 0 && (
@@ -286,86 +312,27 @@ function Tasks() {
               </div>
             </div>
           </div>
-          <aside className="section-side">
-            <div className="glass-card">
-              <h3>
-                <span className="card-icon" aria-hidden="true">L</span>
-                Filter Tips
-              </h3>
-              <ul className="section-list">
-                <li>Use search for quick title matches</li>
-                <li>Sort by due date to plan the week</li>
-                <li>Focus on High priority for deadlines</li>
-              </ul>
-            </div>
-            <div className="glass-card">
-              <h3>
-                <span className="card-icon" aria-hidden="true">G</span>
-                At A Glance
-              </h3>
-              <div className="mini-stats-grid">
-                <div>
-                  <span>Filtered</span>
-                  <strong>{filteredTasks.length}</strong>
-                </div>
-                <div>
-                  <span>Total</span>
-                  <strong>{stats.total}</strong>
-                </div>
-                <div>
-                  <span>Progress</span>
-                  <strong>{stats.progress}%</strong>
-                </div>
-              </div>
-            </div>
-          </aside>
         </section>
       )}
+
       {activeSection === "kanban-board" && (
         <section className="section-grid">
           <div className="section-main">
             <KanbanBoard
-              tasks={filteredTasks}
+              tasks={kanbanTasks}
               onMoveTask={moveTask}
+              onReorderTask={reorderTask}
               onDeleteTask={deleteTask}
+              onAddSubtask={addSubtask}
+              onToggleSubtask={toggleSubtask}
+              onStartTimer={startTaskTimer}
+              onStopTimer={stopTaskTimer}
+              allTasks={tasks}
+              onAddComment={addComment}
+              onEditComment={editComment}
+              onDeleteComment={deleteComment}
             />
           </div>
-          <aside className="section-side">
-            <div className="glass-card">
-              <h3>
-                <span className="card-icon" aria-hidden="true">K</span>
-                Workflow Notes
-              </h3>
-              <p className="dashboard-subtitle">
-                Move tasks through stages to keep delivery on track.
-              </p>
-              <ul className="section-list">
-                <li>To Do: ready to start</li>
-                <li>In Progress: active work</li>
-                <li>Done: completed and reviewed</li>
-              </ul>
-            </div>
-            <div className="glass-card">
-              <h3>
-                <span className="card-icon" aria-hidden="true">P</span>
-                Progress
-              </h3>
-              <div className="mini-stats-grid">
-                <div>
-                  <span>Completion</span>
-                  <strong>{stats.progress}%</strong>
-                </div>
-                <div>
-                  <span>Pending</span>
-                  <strong>{stats.pending}</strong>
-                </div>
-                <div>
-                  <span>Done</span>
-                  <strong>{stats.completed}</strong>
-                </div>
-              </div>
-            </div>
-          </aside>
         </section>
       )}
 
@@ -382,55 +349,20 @@ function Tasks() {
                     task={task}
                     onMoveTask={moveTask}
                     onDeleteTask={deleteTask}
+                    onAddSubtask={addSubtask}
+                    onToggleSubtask={toggleSubtask}
+                    onStartTimer={startTaskTimer}
+                    onStopTimer={stopTaskTimer}
+                    allTasks={tasks}
+                    onAddComment={addComment}
+                    onEditComment={editComment}
+                    onDeleteComment={deleteComment}
                   />
                 ))}
                 {filteredTasks.length === 0 && <p className="kanban-empty">No tasks available yet.</p>}
               </div>
             </div>
           </div>
-          <aside className="section-side">
-            <div className="glass-card">
-              <h3>
-                <span className="card-icon" aria-hidden="true">C</span>
-                Card Actions
-              </h3>
-              <ul className="section-list">
-                <li>Update status from the dropdown</li>
-                <li>Delete tasks you no longer need</li>
-                <li>Review due dates and urgency</li>
-              </ul>
-            </div>
-            <div className="glass-card">
-              <h3>
-                <span className="card-icon" aria-hidden="true">S</span>
-                Summary
-              </h3>
-              <div className="mini-stats-grid">
-                <div>
-                  <span>Total</span>
-                  <strong>{stats.total}</strong>
-                </div>
-                <div>
-                  <span>High</span>
-                  <strong>{tasks.filter((t) => t.priority === "high").length}</strong>
-                </div>
-                <div>
-                  <span>Overdue</span>
-                  <strong>
-                    {
-                      tasks.filter((t) => {
-                        if (!t.dueDate || t.status === "done") return false;
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const due = new Date(`${t.dueDate}T00:00:00`);
-                        return due < today;
-                      }).length
-                    }
-                  </strong>
-                </div>
-              </div>
-            </div>
-          </aside>
         </section>
       )}
 

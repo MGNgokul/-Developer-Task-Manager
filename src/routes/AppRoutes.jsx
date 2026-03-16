@@ -12,6 +12,12 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import NotFound from "../pages/NotFound";
 import Landing from "../pages/Landing";
+import Calendar from "../pages/Calendar";
+import Team from "../pages/Team";
+import Automation from "../pages/Automation";
+import Goals from "../pages/Goals";
+import RiskRegister from "../pages/RiskRegister";
+import ClientPortal from "../pages/ClientPortal";
 
 function AppRoutes() {
   return (
@@ -31,6 +37,12 @@ function AppRoutes() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/automation" element={<Automation />} />
+          <Route path="/goals" element={<Goals />} />
+          <Route path="/risk-register" element={<RiskRegister />} />
+          <Route path="/client-portal" element={<ClientPortal />} />
         </Route>
       </Route>
 

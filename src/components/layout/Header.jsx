@@ -1,5 +1,5 @@
-import { useContext } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useContext, useEffect, useRef, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ThemeContext } from "../../context/ThemeContext";
 import { AuthContext } from "../../context/AuthContext";
@@ -9,12 +9,40 @@ function Header() {
   const { theme, toggleTheme } = useContext(ThemeContext);
   const { user } = useContext(AuthContext);
   const { unreadCount } = useNotifications();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
+  const searchRef = useRef(null);
+  const [quickQuery, setQuickQuery] = useState("");
   const isTasksRoute = pathname.startsWith("/tasks");
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const profileInitial = (user?.name || user?.email || "U").trim().charAt(0).toUpperCase();
 
   const navClass = ({ isActive }) => (isActive ? "nav-link active" : "nav-link");
+
+  useEffect(() => {
+    const onShortcut = (event) => {
+      if (!user) return;
+      const isSlash = event.key === "/";
+      if (!isSlash) return;
+
+      const tag = event.target?.tagName?.toLowerCase();
+      const isTypingField =
+        tag === "input" || tag === "textarea" || event.target?.isContentEditable;
+      if (isTypingField) return;
+
+      event.preventDefault();
+      searchRef.current?.focus();
+    };
+
+    window.addEventListener("keydown", onShortcut);
+    return () => window.removeEventListener("keydown", onShortcut);
+  }, [user]);
+
+  const handleQuickSearch = (event) => {
+    event.preventDefault();
+    const query = quickQuery.trim();
+    navigate(query ? `/tasks?section=task-filter&q=${encodeURIComponent(query)}` : "/tasks?section=task-filter");
+  };
 
   return (
     <motion.header
@@ -33,6 +61,19 @@ function Header() {
       </NavLink>
 
       <div className="nav-actions">
+        {user && (
+          <form className="nav-search" onSubmit={handleQuickSearch}>
+            <input
+              ref={searchRef}
+              type="search"
+              value={quickQuery}
+              onChange={(event) => setQuickQuery(event.target.value)}
+              placeholder="Search tasks... (/)"
+              aria-label="Quick search tasks"
+            />
+          </form>
+        )}
+
         {!user && !isAuthRoute && (
           <NavLink to="/login" className={navClass}>
             <span className="nav-icon" aria-hidden="true">{">"}</span>
@@ -43,6 +84,13 @@ function Header() {
           <NavLink to="/register" className={navClass}>
             <span className="nav-icon" aria-hidden="true">+</span>
             Register
+          </NavLink>
+        )}
+
+        {user && !isTasksRoute && (
+          <NavLink to="/calendar" className={navClass}>
+            <span className="nav-icon" aria-hidden="true">C</span>
+            Calendar
           </NavLink>
         )}
 
