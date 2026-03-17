@@ -20,6 +20,7 @@ function RiskRegister() {
     likelihood: "medium",
     mitigation: "",
   });
+  const [error, setError] = useState("");
 
   const summary = useMemo(() => {
     return {
@@ -36,7 +37,17 @@ function RiskRegister() {
 
   const addRisk = () => {
     const title = draft.title.trim();
-    if (!title) return;
+    if (!title) {
+      setError("Risk title is required.");
+      return;
+    }
+    const duplicate = risks.some(
+      (item) => item.title.trim().toLowerCase() === title.toLowerCase()
+    );
+    if (duplicate) {
+      setError("That risk already exists.");
+      return;
+    }
     const item = {
       id: crypto.randomUUID(),
       title,
@@ -46,6 +57,7 @@ function RiskRegister() {
       status: "open",
       createdAt: new Date().toISOString(),
     };
+    setError("");
     persist([item, ...risks]);
     setDraft({ title: "", impact: "medium", likelihood: "medium", mitigation: "" });
   };
@@ -77,8 +89,15 @@ function RiskRegister() {
             <input
               type="text"
               value={draft.title}
-              onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
+              onChange={(e) => {
+                const nextTitle = e.target.value;
+                setDraft((prev) => ({ ...prev, title: nextTitle }));
+                if (error && nextTitle.trim()) {
+                  setError("");
+                }
+              }}
               placeholder="Vendor API instability"
+              className={error ? "input-error" : ""}
             />
           </label>
           <label className="settings-toggle">
@@ -109,6 +128,7 @@ function RiskRegister() {
             onChange={(e) => setDraft((prev) => ({ ...prev, mitigation: e.target.value }))}
             placeholder="Mitigation plan..."
           />
+          {error && <p className="error">{error}</p>}
           <button type="button" className="btn" onClick={addRisk}>
             Add Risk
           </button>

@@ -1,8 +1,9 @@
+import { useContext } from "react";
 import TaskForm from "../components/tasks/TaskForm";
-import useTasks from "../hooks/useTasks";
+import { TaskContext } from "../context/TaskContext";
 
 function TasksFormPage() {
-  const { tasks, addTask, stats } = useTasks();
+  const { tasks, addTask, stats } = useContext(TaskContext);
 
   return (
     <div className="dashboard-page">

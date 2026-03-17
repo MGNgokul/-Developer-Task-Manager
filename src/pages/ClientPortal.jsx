@@ -19,6 +19,7 @@ function ClientPortal() {
     summary: "",
     status: "on-track",
   });
+  const [errors, setErrors] = useState({});
 
   const grouped = useMemo(() => {
     return updates.reduce((map, item) => {
@@ -37,7 +38,19 @@ function ClientPortal() {
   const addUpdate = () => {
     const client = draft.client.trim();
     const summary = draft.summary.trim();
-    if (!client || !summary) return;
+    const nextErrors = {};
+    if (!client) {
+      nextErrors.client = "Client name is required.";
+    }
+    if (!summary) {
+      nextErrors.summary = "Summary is required.";
+    } else if (summary.length < 10) {
+      nextErrors.summary = "Summary should be at least 10 characters.";
+    }
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
     const item = {
       id: crypto.randomUUID(),
       client,
@@ -45,6 +58,7 @@ function ClientPortal() {
       status: draft.status,
       createdAt: new Date().toISOString(),
     };
+    setErrors({});
     persist([item, ...updates]);
     setDraft({ client: "", summary: "", status: "on-track" });
   };
@@ -72,10 +86,18 @@ function ClientPortal() {
             <input
               type="text"
               value={draft.client}
-              onChange={(e) => setDraft((prev) => ({ ...prev, client: e.target.value }))}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDraft((prev) => ({ ...prev, client: next }));
+                if (errors.client && next.trim()) {
+                  setErrors((prev) => ({ ...prev, client: "" }));
+                }
+              }}
               placeholder="Acme Corp"
+              className={errors.client ? "input-error" : ""}
             />
           </label>
+          {errors.client && <p className="error">{errors.client}</p>}
           <label>
             Status
             <select
@@ -92,10 +114,18 @@ function ClientPortal() {
             <textarea
               rows={5}
               value={draft.summary}
-              onChange={(e) => setDraft((prev) => ({ ...prev, summary: e.target.value }))}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDraft((prev) => ({ ...prev, summary: next }));
+                if (errors.summary && next.trim().length >= 10) {
+                  setErrors((prev) => ({ ...prev, summary: "" }));
+                }
+              }}
               placeholder="Delivery summary for this client..."
+              className={errors.summary ? "input-error" : ""}
             />
           </label>
+          {errors.summary && <p className="error">{errors.summary}</p>}
           <button type="button" className="btn" onClick={addUpdate}>
             Publish Update
           </button>

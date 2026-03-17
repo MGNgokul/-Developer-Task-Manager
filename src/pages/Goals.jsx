@@ -17,6 +17,8 @@ function loadMonthlyGoal() {
 function Goals() {
   const { tasks, stats } = useContext(TaskContext);
   const [monthlyGoal, setMonthlyGoal] = useState(loadMonthlyGoal);
+  const [monthlyDraft, setMonthlyDraft] = useState(() => String(loadMonthlyGoal()));
+  const [goalError, setGoalError] = useState("");
   const [message, setMessage] = useState("");
 
   const monthCompleted = useMemo(() => {
@@ -32,9 +34,7 @@ function Goals() {
 
   const monthlyProgress = Math.min(100, Math.round((monthCompleted / Math.max(1, monthlyGoal)) * 100));
 
-  const updateMonthlyGoal = (value) => {
-    const next = Math.max(1, Math.min(500, Number(value) || 1));
-    setMonthlyGoal(next);
+  const persistMonthlyGoal = (next) => {
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
       const payload = {
@@ -52,6 +52,31 @@ function Goals() {
       setMessage("Save failed.");
       setTimeout(() => setMessage(""), 1200);
     }
+  };
+
+  const updateMonthlyGoal = (value) => {
+    setMonthlyDraft(value);
+    const trimmed = String(value).trim();
+    if (!trimmed) {
+      setGoalError("Monthly goal is required.");
+      return;
+    }
+    const numeric = Number(trimmed);
+    if (!Number.isFinite(numeric)) {
+      setGoalError("Enter a valid number.");
+      return;
+    }
+    if (!Number.isInteger(numeric)) {
+      setGoalError("Use a whole number.");
+      return;
+    }
+    if (numeric < 1 || numeric > 500) {
+      setGoalError("Enter a value between 1 and 500.");
+      return;
+    }
+    setGoalError("");
+    setMonthlyGoal(numeric);
+    persistMonthlyGoal(numeric);
   };
 
   return (
@@ -85,10 +110,12 @@ function Goals() {
               type="number"
               min={1}
               max={500}
-              value={monthlyGoal}
+              value={monthlyDraft}
               onChange={(e) => updateMonthlyGoal(e.target.value)}
+              className={goalError ? "input-error" : ""}
             />
           </label>
+          {goalError && <p className="error">{goalError}</p>}
           <p className="dashboard-subtitle">
             {monthCompleted} / {monthlyGoal} completed this month
           </p>

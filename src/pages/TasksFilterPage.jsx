@@ -1,8 +1,12 @@
+import { useContext, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import TaskFilter from "../components/tasks/TaskFilter";
 import TaskCard from "../components/tasks/TaskCard";
-import useTasks from "../hooks/useTasks";
+import { TaskContext } from "../context/TaskContext";
 
 function TasksFilterPage() {
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
   const {
     tasks,
     filteredTasks,
@@ -25,7 +29,12 @@ function TasksFilterPage() {
     addComment,
     editComment,
     deleteComment,
-  } = useTasks();
+  } = useContext(TaskContext);
+
+  useEffect(() => {
+    if (!query) return;
+    setSearch((prev) => (prev === query ? prev : query));
+  }, [query, setSearch]);
 
   return (
     <div className="dashboard-page">

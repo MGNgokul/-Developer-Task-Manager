@@ -32,6 +32,7 @@ function loadAutomationSettings() {
 function Automation() {
   const [settings, setSettings] = useState(loadAutomationSettings);
   const [message, setMessage] = useState("");
+  const [archiveError, setArchiveError] = useState("");
   const hours = useMemo(
     () =>
       Array.from({ length: 24 }, (_, hour) => ({
@@ -46,6 +47,29 @@ function Automation() {
     localStorage.setItem(KEY, JSON.stringify(next));
     setMessage("Automation settings saved.");
     setTimeout(() => setMessage(""), 1200);
+  };
+
+  const updateArchiveDays = (value) => {
+    const trimmed = String(value).trim();
+    if (!trimmed) {
+      setArchiveError("Archive days is required.");
+      return;
+    }
+    const numeric = Number(trimmed);
+    if (!Number.isFinite(numeric)) {
+      setArchiveError("Enter a valid number.");
+      return;
+    }
+    if (!Number.isInteger(numeric)) {
+      setArchiveError("Use a whole number.");
+      return;
+    }
+    if (numeric < 1 || numeric > 90) {
+      setArchiveError("Enter a value between 1 and 90.");
+      return;
+    }
+    setArchiveError("");
+    save({ ...settings, archiveAfterDays: numeric });
   };
 
   return (
@@ -79,14 +103,11 @@ function Automation() {
               min={1}
               max={90}
               value={settings.archiveAfterDays}
-              onChange={(e) =>
-                save({
-                  ...settings,
-                  archiveAfterDays: Math.max(1, Math.min(90, Number(e.target.value) || 1)),
-                })
-              }
+              onChange={(e) => updateArchiveDays(e.target.value)}
+              className={archiveError ? "input-error" : ""}
             />
           </label>
+          {archiveError && <p className="error">{archiveError}</p>}
         </article>
 
         <article className="glass-card settings-card">

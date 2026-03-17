@@ -3,9 +3,11 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 import ToastStack from "../ui/ToastStack";
 import QuickActions from "./QuickActions";
+import MobileBottomNav from "./MobileBottomNav";
 
 function DashboardLayout() {
   const { pathname } = useLocation();
+  const showMobileBottomNav = true;
   const showSidebar =
     pathname === "/dashboard" ||
     pathname === "/analytics" ||
@@ -22,7 +24,7 @@ function DashboardLayout() {
     pathname.startsWith("/tasks");
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${showMobileBottomNav ? "app-container--bottom-nav" : ""}`.trim()}>
       <Header />
       <ToastStack />
       <QuickActions />
@@ -32,6 +34,7 @@ function DashboardLayout() {
           <Outlet />
         </div>
       </div>
+      {showMobileBottomNav && <MobileBottomNav />}
     </div>
   );
 }

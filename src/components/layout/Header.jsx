@@ -13,7 +13,6 @@ function Header() {
   const { pathname } = useLocation();
   const searchRef = useRef(null);
   const [quickQuery, setQuickQuery] = useState("");
-  const isTasksRoute = pathname.startsWith("/tasks");
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const profileInitial = (user?.name || user?.email || "U").trim().charAt(0).toUpperCase();
 
@@ -41,7 +40,7 @@ function Header() {
   const handleQuickSearch = (event) => {
     event.preventDefault();
     const query = quickQuery.trim();
-    navigate(query ? `/tasks?section=task-filter&q=${encodeURIComponent(query)}` : "/tasks?section=task-filter");
+    navigate(query ? `/tasks/filter?q=${encodeURIComponent(query)}` : "/tasks/filter");
   };
 
   return (
@@ -87,14 +86,14 @@ function Header() {
           </NavLink>
         )}
 
-        {user && !isTasksRoute && (
+        {user && (
           <NavLink to="/calendar" className={navClass}>
             <span className="nav-icon" aria-hidden="true">C</span>
             Calendar
           </NavLink>
         )}
 
-        {user && !isTasksRoute && (
+        {user && (
           <NavLink to="/notifications" className={navClass}>
             <span className="nav-icon" aria-hidden="true">{"\uD83D\uDD14"}</span>
             Alerts
@@ -102,35 +101,10 @@ function Header() {
           </NavLink>
         )}
 
-        {user && !isTasksRoute && (
+        {user && (
           <NavLink to="/profile" className={navClass}>
             <span className="nav-icon nav-icon-profile" aria-hidden="true">{profileInitial}</span>
             Profile
-          </NavLink>
-        )}
-
-        {user && isTasksRoute && (
-          <NavLink to="/tasks?section=task-form" className={navClass}>
-            <span className="nav-icon" aria-hidden="true">F</span>
-            Task Form
-          </NavLink>
-        )}
-        {user && isTasksRoute && (
-          <NavLink to="/tasks?section=task-filter" className={navClass}>
-            <span className="nav-icon" aria-hidden="true">L</span>
-            Task Filter
-          </NavLink>
-        )}
-        {user && isTasksRoute && (
-          <NavLink to="/tasks?section=kanban-board" className={navClass}>
-            <span className="nav-icon" aria-hidden="true">K</span>
-            Kanban Board
-          </NavLink>
-        )}
-        {user && isTasksRoute && (
-          <NavLink to="/tasks?section=task-cards" className={navClass}>
-            <span className="nav-icon" aria-hidden="true">C</span>
-            Task Cards
           </NavLink>
         )}
 

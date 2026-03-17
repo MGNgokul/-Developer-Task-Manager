@@ -141,28 +141,28 @@ function Tasks() {
           <section className="dashboard-local-nav">
             <Link
               className={`filter-btn dashboard-nav-btn ${activeSection === "task-form" ? "filter-btn--active" : ""}`}
-              to="/tasks?section=task-form"
+              to="/tasks/form"
             >
               <span className="dashboard-nav-letter" aria-hidden="true">F</span>
               <span>Task Form</span>
             </Link>
             <Link
               className={`filter-btn dashboard-nav-btn ${activeSection === "task-filter" ? "filter-btn--active" : ""}`}
-              to="/tasks?section=task-filter"
+              to="/tasks/filter"
             >
               <span className="dashboard-nav-letter" aria-hidden="true">L</span>
               <span>Task Filter</span>
             </Link>
             <Link
               className={`filter-btn dashboard-nav-btn ${activeSection === "kanban-board" ? "filter-btn--active" : ""}`}
-              to="/tasks?section=kanban-board"
+              to="/tasks/kanban"
             >
               <span className="dashboard-nav-letter" aria-hidden="true">K</span>
               <span>Kanban Board</span>
             </Link>
             <Link
               className={`filter-btn dashboard-nav-btn ${activeSection === "task-cards" ? "filter-btn--active" : ""}`}
-              to="/tasks?section=task-cards"
+              to="/tasks/cards"
             >
               <span className="dashboard-nav-letter" aria-hidden="true">C</span>
               <span>Task Cards</span>

@@ -1,5 +1,6 @@
+import { useContext } from "react";
 import TaskCard from "../components/tasks/TaskCard";
-import useTasks from "../hooks/useTasks";
+import { TaskContext } from "../context/TaskContext";
 
 function TasksCardsPage() {
   const {
@@ -11,7 +12,7 @@ function TasksCardsPage() {
     addComment,
     editComment,
     deleteComment,
-  } = useTasks();
+  } = useContext(TaskContext);
 
   return (
     <div className="dashboard-page">

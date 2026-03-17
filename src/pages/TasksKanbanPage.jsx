@@ -1,8 +1,9 @@
+import { useContext } from "react";
 import KanbanBoard from "../components/tasks/KanbanBoard";
-import useTasks from "../hooks/useTasks";
+import { TaskContext } from "../context/TaskContext";
 
 function TasksKanbanPage() {
-  const { filteredTasks, moveTask, deleteTask, stats } = useTasks();
+  const { filteredTasks, moveTask, deleteTask, stats } = useContext(TaskContext);
 
   return (
     <div className="dashboard-page">

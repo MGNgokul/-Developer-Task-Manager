@@ -26,8 +26,8 @@ function QuickActions() {
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.22 }}
           >
-            <Link to="/tasks?section=task-form" onClick={() => setOpen(false)}>New Task</Link>
-            <Link to="/tasks?section=kanban-board" onClick={() => setOpen(false)}>Kanban</Link>
+            <Link to="/tasks/form" onClick={() => setOpen(false)}>New Task</Link>
+            <Link to="/tasks/kanban" onClick={() => setOpen(false)}>Kanban</Link>
             <Link to="/analytics" onClick={() => setOpen(false)}>Analytics</Link>
             <Link to="/calendar" onClick={() => setOpen(false)}>Calendar</Link>
           </motion.div>

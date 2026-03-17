@@ -167,9 +167,9 @@ function Dashboard() {
       </motion.div>
 
       <section className="dashboard-local-nav">
-        <Link className="filter-btn" to="/tasks?section=task-form">Create Task</Link>
-        <Link className="filter-btn" to="/tasks?section=task-filter">Filter Tasks</Link>
-        <Link className="filter-btn" to="/tasks?section=kanban-board">Open Kanban</Link>
+        <Link className="filter-btn" to="/tasks/form">Create Task</Link>
+        <Link className="filter-btn" to="/tasks/filter">Filter Tasks</Link>
+        <Link className="filter-btn" to="/tasks/kanban">Open Kanban</Link>
         <Link className="filter-btn" to="/analytics">View Analytics</Link>
       </section>
 
@@ -306,7 +306,7 @@ function Dashboard() {
                       {item.dueDate ? ` | due ${formatDate(item.dueDate)}` : ""}
                     </p>
                   </div>
-                  <Link className="filter-btn" to="/tasks?section=task-filter">
+                  <Link className="filter-btn" to="/tasks/filter">
                     Open
                   </Link>
                 </article>
