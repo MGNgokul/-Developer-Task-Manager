@@ -2,20 +2,20 @@
   "name": "DevTask Pro",
   "short_name": "DevTask",
   "description": "Modern task management workspace with analytics, reminders, and offline support.",
-  "start_url": "/-Developer-Task-Manager/",
-  "scope": "/-Developer-Task-Manager/",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/-Developer-Task-Manager/favicon.png",
+      "src": "favicon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/-Developer-Task-Manager/favicon.svg",
+      "src": "favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

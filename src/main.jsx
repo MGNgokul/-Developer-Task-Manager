@@ -13,6 +13,15 @@ import { registerServiceWorker } from "./pwa/registerServiceWorker";
 
 registerServiceWorker();
 
+const resolveBasename = () => {
+  const base = import.meta.env.BASE_URL || "/";
+  if (base !== "/") return base;
+  if (window.location.pathname.startsWith("/-Developer-Task-Manager/")) {
+    return "/-Developer-Task-Manager";
+  }
+  return "/";
+};
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider>
@@ -21,7 +30,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <TeamPresenceProvider>
             <FocusProvider>
               <NotificationProvider>
-                <BrowserRouter basename={import.meta.env.BASE_URL}>
+                <BrowserRouter
+                  basename={resolveBasename()}
+                  future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+                >
                   <App />
                 </BrowserRouter>
               </NotificationProvider>
